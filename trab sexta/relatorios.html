@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Relatórios</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Progress bar */
+    .progress-wrap { margin: .4rem 0 .9rem; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .8rem;
+      color: var(--text-secondary);
+      margin-bottom: .35rem;
+    }
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange-dark), var(--orange));
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+
+    /* Indicador card */
+    .indicator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.4rem 1.5rem;
+      transition: var(--transition);
+    }
+    .indicator-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+    .indicator-value {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--orange);
+      line-height: 1;
+    }
+    .indicator-label {
+      font-size: .8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-top: .3rem;
+    }
+    .indicator-sub {
+      font-size: .82rem;
+      color: var(--text-muted);
+      margin-top: .4rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Relatórios e <span>Indicadores</span></h1>
+      <p>Estatísticas e dados do sistema</p>
+    </div>
+
+    <!-- Indicadores principais -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem;" id="indicators-grid"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
+
+      <!-- Distribuição de preços -->
+      <div class="card" style="padding:1.5rem;">
+        <p class="section-title">Distribuição por Faixa de Preço</p>
+        <div id="price-distribution"></div>
+      </div>
+
+      <!-- Tabela de motos completa -->
+      <div class="card" style="padding:1.5rem;">
+        <p class="section-title">Motos — Maior para Menor Preço</p>
+        <div id="motos-ranking"></div>
+      </div>
+
+    </div>
+
+    <!-- Clientes recentes -->
+    <div style="margin-top:2rem;" class="card" style2="padding:1.5rem;">
+      <div style="padding:1.5rem;">
+        <p class="section-title">Últimos Clientes Cadastrados</p>
+        <div id="clientes-recentes"></div>
+      </div>
+    </div>
+
+    <!-- Compras / Interesses -->
+    <div style="margin-top:2rem;" class="card">
+      <div style="padding:1.5rem;">
+        <p class="section-title">Histórico de Interesses</p>
+        <div id="compras-hist"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer-strip">
+  <span>Moto-Dark</span> &copy;  Relatórios
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== RELATÓRIOS =====
+
+function renderRelatorios() {
+  const motos    = getMotos();
+  const clientes = getClientes();
+  const compras  = getCompras();
+
+  // --- Calcular estatísticas ---
+  const totalVal    = motos.reduce((s, m) => s + m.preco, 0);
+  const mediaPreco  = motos.length ? totalVal / motos.length : 0;
+  const maiorPreco  = motos.length ? Math.max(...motos.map(m => m.preco)) : 0;
+  const menorPreco  = motos.length ? Math.min(...motos.map(m => m.preco)) : 0;
+
+  // --- Indicadores ---
+  document.getElementById('indicators-grid').innerHTML = [
+    { label: 'Total de Motos',     value: motos.length,           sub: 'no catálogo' },
+    { label: 'Total de Clientes',  value: clientes.length,        sub: 'cadastrados' },
+    { label: 'Interesses',         value: compras.length,         sub: 'registrados' },
+    { label: 'Preço Médio',        value: formatBRL(mediaPreco),  sub: 'por moto',   raw: true },
+    { label: 'Maior Preço',        value: formatBRL(maiorPreco),  sub: 'no catálogo',raw: true },
+    { label: 'Menor Preço',        value: formatBRL(menorPreco),  sub: 'no catálogo',raw: true },
+  ].map(i => `
+    <div class="indicator-card">
+      <div class="indicator-value">${i.raw ? i.value : i.value}</div>
+      <div class="indicator-label">${i.label}</div>
+      <div class="indicator-sub">${i.sub}</div>
+    </div>`).join('');
+
+  // --- Distribuição por faixa de preço ---
+  const faixas = [
+    { label: 'Até R$ 15.000',       min: 0,     max: 15000  },
+    { label: 'R$ 15k – R$ 25k',     min: 15000, max: 25000  },
+    { label: 'R$ 25k – R$ 35k',     min: 25000, max: 35000  },
+    { label: 'Acima de R$ 35.000',  min: 35000, max: Infinity },
+  ];
+  const maxCount = Math.max(...faixas.map(f =>
+    motos.filter(m => m.preco >= f.min && m.preco < f.max).length
+  ), 1);
+
+  document.getElementById('price-distribution').innerHTML = faixas.map(f => {
+    const count = motos.filter(m => m.preco >= f.min && m.preco < f.max).length;
+    const pct   = Math.round((count / maxCount) * 100);
+    return `
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>${f.label}</span>
+          <span>${count} moto${count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // --- Ranking de motos ---
+  const sorted = [...motos].sort((a, b) => b.preco - a.preco);
+  document.getElementById('motos-ranking').innerHTML = sorted.length
+    ? `<div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Nome</th><th>Preço</th></tr></thead>
+          <tbody>
+            ${sorted.map((m, i) => `
+              <tr>
+                <td style="color:var(--text-muted)">${i + 1}</td>
+                <td>${m.nome}</td>
+                <td style="color:var(--orange);font-weight:700;">${formatBRL(m.preco)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`
+    : `<p style="color:var(--text-muted)">Nenhuma moto cadastrada.</p>`;
+
+  // --- Clientes recentes ---
+  const recentes = [...clientes].slice(-5).reverse();
+  document.getElementById('clientes-recentes').innerHTML = recentes.length
+    ? `<div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>E-mail</th><th>CPF</th><th>Cadastro</th></tr></thead>
+          <tbody>
+            ${recentes.map(c => `
+              <tr>
+                <td><strong>${c.nome}</strong></td>
+                <td style="font-size:.85rem;">${c.email}</td>
+                <td style="font-size:.85rem;color:var(--text-secondary)">${c.cpf}</td>
+                <td style="font-size:.82rem;color:var(--text-muted)">${c.dataCad || '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`
+    : `<div class="empty-state"><div class="empty-icon">👥</div><p>Nenhum cliente cadastrado ainda.</p></div>`;
+
+  // --- Histórico de interesses ---
+  const hist = [...compras].reverse();
+  document.getElementById('compras-hist').innerHTML = hist.length
+    ? `<div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th>Tipo</th><th>Valor</th><th>Data</th></tr></thead>
+          <tbody>
+            ${hist.map(c => `
+              <tr>
+                <td><strong>${c.nome}</strong></td>
+                <td><span class="badge badge-orange">${c.tipo || 'moto'}</span></td>
+                <td style="color:var(--orange);font-weight:700;">${formatBRL(c.preco)}</td>
+                <td style="font-size:.82rem;color:var(--text-muted)">${c.data || '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`
+    : `<div class="empty-state"><div class="empty-icon">🛒</div><p>Nenhum interesse registrado ainda.</p></div>`;
+}
+
+renderRelatorios();
+</script>
+</body>
+</html>

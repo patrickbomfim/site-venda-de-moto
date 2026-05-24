@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Clientes</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Cadastro de <span>Clientes</span></h1>
+      <p>Gerencie os clientes da Moto-Dark</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:2rem;align-items:start;">
+
+      <!-- Formulário -->
+      <div class="form-section">
+        <p class="section-title">Novo Cliente</p>
+        <div id="form-feedback"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="nome">Nome Completo *</label>
+          <input type="text" id="nome" class="form-control"
+            placeholder="Ex: João da Silva" maxlength="100"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cpf">CPF *</label>
+          <input type="text" id="cpf" class="form-control"
+            placeholder="000.000.000-00" maxlength="14"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">E-mail *</label>
+          <input type="email" id="email" class="form-control"
+            placeholder="cliente@email.com"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="telefone">Telefone</label>
+          <input type="text" id="telefone" class="form-control"
+            placeholder="(00) 00000-0000" maxlength="15"/>
+        </div>
+
+        <button class="btn btn-primary btn-full btn-lg" id="btn-cadastrar">
+          👥 Cadastrar Cliente
+        </button>
+      </div>
+
+      <!-- Lista de clientes -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+          <p class="section-title" style="margin:0">Clientes Cadastrados</p>
+          <span id="total-clientes" class="badge badge-orange"></span>
+        </div>
+
+        <!-- Busca de clientes -->
+        <div class="search-input-wrap" style="margin-bottom:1rem;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-cliente" class="form-control"
+            placeholder="Buscar cliente..." autocomplete="off"/>
+        </div>
+
+        <div id="lista-clientes"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer-strip">
+  <span>Moto-Dark</span> &copy; 2025 · Sistema de Vendas
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== CADASTRO DE CLIENTES =====
+
+const feedbackEl = document.getElementById('form-feedback');
+const listaEl    = document.getElementById('lista-clientes');
+const totalEl    = document.getElementById('total-clientes');
+
+// Máscara CPF
+document.getElementById('cpf').addEventListener('input', function () {
+  this.value = maskCPF(this.value);
+});
+
+// Máscara telefone
+document.getElementById('telefone').addEventListener('input', function () {
+  this.value = maskPhone(this.value);
+});
+
+/** Exibe feedback no formulário */
+function showFeedback(msg, type) {
+  feedbackEl.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => (feedbackEl.innerHTML = ''), 4000);
+}
+
+/** Cadastra cliente */
+document.getElementById('btn-cadastrar').addEventListener('click', () => {
+  const nome     = document.getElementById('nome').value.trim();
+  const cpf      = document.getElementById('cpf').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const telefone = document.getElementById('telefone').value.trim();
+
+  if (!nome)  return showFeedback('⚠️ Informe o nome completo.', 'danger');
+  if (!cpf || !validarCPF(cpf)) return showFeedback('⚠️ CPF inválido. Use o formato 000.000.000-00.', 'danger');
+  if (!email || !email.includes('@')) return showFeedback('⚠️ Informe um e-mail válido.', 'danger');
+
+  const clientes = getClientes();
+
+  if (clientes.some(c => c.cpf === cpf)) {
+    return showFeedback('⚠️ CPF já cadastrado.', 'danger');
+  }
+
+  const novo = {
+    id: 'c' + Date.now(),
+    nome, cpf, email, telefone,
+    dataCad: new Date().toLocaleDateString('pt-BR')
+  };
+
+  clientes.push(novo);
+  saveClientes(clientes);
+
+  showFeedback(`✅ Cliente "${nome}" cadastrado!`, 'success');
+  showToast(`Cliente "${nome}" adicionado!`, 'success');
+
+  // Limpa
+  ['nome','cpf','email','telefone'].forEach(id => document.getElementById(id).value = '');
+
+  renderLista();
+});
+
+/** Remove cliente */
+function deleteCliente(id) {
+  saveClientes(getClientes().filter(c => c.id !== id));
+  showToast('Cliente removido.', 'info');
+  renderLista();
+}
+
+/** Renderiza lista de clientes */
+function renderLista(filtro = '') {
+  let clientes = getClientes();
+  if (filtro) clientes = clientes.filter(c =>
+    c.nome.toLowerCase().includes(filtro) ||
+    c.email.toLowerCase().includes(filtro) ||
+    c.cpf.includes(filtro)
+  );
+
+  totalEl.textContent = `${clientes.length} cliente${clientes.length !== 1 ? 's' : ''}`;
+
+  if (!clientes.length) {
+    listaEl.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>Nenhum cliente encontrado.</p></div>`;
+    return;
+  }
+
+  const rows = clientes.map(c => `
+    <tr>
+      <td><strong>${c.nome}</strong></td>
+      <td style="color:var(--text-secondary);font-size:.85rem;">${c.cpf}</td>
+      <td style="font-size:.85rem;">${c.email}</td>
+      <td style="font-size:.85rem;color:var(--text-secondary);">${c.telefone || '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteCliente('${c.id}')">🗑️</button></td>
+    </tr>`).join('');
+
+  listaEl.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>CPF</th><th>E-mail</th><th>Tel.</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// Busca em tempo real
+document.getElementById('search-cliente').addEventListener('input', function () {
+  renderLista(this.value.toLowerCase().trim());
+});
+
+// Inicializa
+renderLista();
+</script>
+</body>
+</html>

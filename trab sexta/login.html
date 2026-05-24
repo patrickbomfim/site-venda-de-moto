@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Login</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Animação de partículas de fundo */
+    .login-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .login-bg span {
+      position: absolute;
+      display: block;
+      width: 2px;
+      height: 2px;
+      background: var(--orange);
+      border-radius: 50%;
+      animation: float linear infinite;
+      opacity: 0;
+    }
+    @keyframes float {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: .6; }
+      90%  { opacity: .3; }
+      100% { transform: translateY(-10px) scale(1.5); opacity: 0; }
+    }
+    .demo-hint {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: .6rem .9rem;
+    }
+    .demo-hint strong { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- Fundo animado -->
+<div class="login-bg" id="login-bg"></div>
+
+<!-- ===== LOGIN BOX ===== -->
+<div class="login-page">
+  <div class="login-box" style="position:relative;z-index:1;">
+
+    <div class="login-logo">
+      <div class="logo-text">🏍️ Moto-Dark</div>
+      <div class="logo-sub">Sistema de Vendas</div>
+    </div>
+
+    <div id="form-feedback"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="email">E-mail</label>
+      <input type="email" id="email" class="form-control"
+        placeholder="admin@motodark.com" value="admin@motodark.com"/>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="senha">Senha</label>
+      <input type="password" id="senha" class="form-control"
+        placeholder="••••••••" value="123456"/>
+    </div>
+
+    <button class="btn btn-primary btn-full btn-lg" id="btn-login" style="margin-top:.5rem;">
+      🔑 Entrar
+    </button>
+
+    <div class="demo-hint">
+      Demo: <strong>admin@motodark.com</strong> / <strong>123456</strong>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem;">
+      <a href="index.html" style="color:var(--text-muted);font-size:.82rem;text-decoration:none;">
+        ← Voltar ao catálogo
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+// ===== LOGIN (apenas front-end, sem autenticação real) =====
+
+/** Gera partículas animadas no fundo */
+function createParticles() {
+  const bg = document.getElementById('login-bg');
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span');
+    s.style.left    = Math.random() * 100 + 'vw';
+    s.style.width   = (Math.random() * 4 + 1) + 'px';
+    s.style.height  = s.style.width;
+    s.style.animationDuration = (Math.random() * 8 + 4) + 's';
+    s.style.animationDelay   = (Math.random() * 6) + 's';
+    bg.appendChild(s);
+  }
+}
+createParticles();
+
+/** Login demo */
+document.getElementById('btn-login').addEventListener('click', () => {
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value.trim();
+  const fb    = document.getElementById('form-feedback');
+
+  if (!email || !senha) {
+    fb.innerHTML = `<div class="alert alert-danger">⚠️ Preencha e-mail e senha.</div>`;
+    return;
+  }
+
+  // Credenciais demo
+  if (email === 'admin@motodark.com' && senha === '123456') {
+    fb.innerHTML = `<div class="alert alert-success">✅ Login realizado! Redirecionando...</div>`;
+    setTimeout(() => window.location.href = 'dashboard.html', 1200);
+  } else {
+    fb.innerHTML = `<div class="alert alert-danger">❌ E-mail ou senha incorretos.</div>`;
+  }
+});
+
+/** Permite pressionar Enter para logar */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
+});
+</script>
+</body>
+</html>

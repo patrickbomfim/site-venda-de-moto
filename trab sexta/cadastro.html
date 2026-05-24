@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Cadastrar Moto</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Cadastrar <span>Moto</span></h1>
+      <p>Adicione uma nova moto ao catálogo</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
+
+      <!-- Formulário -->
+      <div class="form-section">
+        <p class="section-title">Nova Moto</p>
+
+        <!-- Feedback -->
+        <div id="form-feedback"></div>
+
+        <!-- Nome -->
+        <div class="form-group">
+          <label class="form-label" for="nome">Nome da Moto *</label>
+          <input type="text" id="nome" class="form-control"
+            placeholder="Ex: Honda CB 500F" maxlength="80" autocomplete="off"/>
+        </div>
+
+        <!-- Preço -->
+        <div class="form-group">
+          <label class="form-label" for="preco">Preço (R$) *</label>
+          <input type="number" id="preco" class="form-control"
+            placeholder="Ex: 32500" min="1" max="9999999" step="0.01"/>
+        </div>
+
+        <!-- URL da imagem -->
+        <div class="form-group">
+          <label class="form-label" for="img">URL da Imagem</label>
+          <input type="url" id="img" class="form-control"
+            placeholder="https://... (opcional)"/>
+        </div>
+
+        <!-- Preview da imagem -->
+        <div id="img-preview-wrap" style="display:none;margin-bottom:1.25rem;">
+          <img id="img-preview" src="" alt="Preview"
+            style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);"/>
+        </div>
+
+        <button class="btn btn-primary btn-full btn-lg" id="btn-cadastrar">
+          ➕ Cadastrar Moto
+        </button>
+      </div>
+
+      <!-- Lista de motos cadastradas -->
+      <div>
+        <p class="section-title">Motos Cadastradas</p>
+        <div id="lista-motos"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer-strip">
+  <span>Moto-Dark</span> &copy; 2025 · Sistema de Vendas
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== CADASTRO DE MOTOS =====
+
+const feedbackEl   = document.getElementById('form-feedback');
+const imgInput     = document.getElementById('img');
+const imgPreview   = document.getElementById('img-preview');
+const imgWrap      = document.getElementById('img-preview-wrap');
+const listaMotoEl  = document.getElementById('lista-motos');
+
+/** Mostra preview da imagem ao digitar URL */
+imgInput.addEventListener('input', () => {
+  const url = imgInput.value.trim();
+  if (url) {
+    imgPreview.src = url;
+    imgPreview.onload  = () => (imgWrap.style.display = 'block');
+    imgPreview.onerror = () => (imgWrap.style.display = 'none');
+  } else {
+    imgWrap.style.display = 'none';
+  }
+});
+
+/** Exibe mensagem de feedback no formulário */
+function showFeedback(msg, type) {
+  feedbackEl.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => (feedbackEl.innerHTML = ''), 4000);
+}
+
+/** Cadastra moto no localStorage */
+document.getElementById('btn-cadastrar').addEventListener('click', () => {
+  const nome  = document.getElementById('nome').value.trim();
+  const preco = parseFloat(document.getElementById('preco').value);
+  const img   = imgInput.value.trim();
+
+  // Validações
+  if (!nome) return showFeedback('⚠️ Informe o nome da moto.', 'danger');
+  if (!preco || preco <= 0) return showFeedback('⚠️ Informe um preço válido.', 'danger');
+
+  const motos = getMotos();
+
+  // Verifica duplicata
+  if (motos.some(m => m.nome.toLowerCase() === nome.toLowerCase())) {
+    return showFeedback('⚠️ Já existe uma moto com esse nome.', 'danger');
+  }
+
+  const nova = { id: uid(), nome, preco, img, emplacamento: true };
+  motos.push(nova);
+  saveMotos(motos);
+
+  showFeedback(`✅ "${nome}" cadastrada com sucesso!`, 'success');
+  showToast(`Moto "${nome}" adicionada!`, 'success');
+
+  // Limpa formulário
+  document.getElementById('nome').value  = '';
+  document.getElementById('preco').value = '';
+  imgInput.value = '';
+  imgWrap.style.display = 'none';
+
+  renderLista();
+});
+
+/** Exclui moto da lista */
+function deleteMoto(id) {
+  const motos = getMotos().filter(m => m.id !== id);
+  saveMotos(motos);
+  showToast('Moto removida.', 'info');
+  renderLista();
+}
+
+/** Renderiza tabela de motos cadastradas */
+function renderLista() {
+  const motos = getMotos();
+
+  if (!motos.length) {
+    listaMotoEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🏍️</div><p>Nenhuma moto cadastrada ainda.</p></div>`;
+    return;
+  }
+
+  let rows = motos.map(m => `
+    <tr>
+      <td>
+        ${m.img ? `<img src="${m.img}" alt="${m.nome}"
+          style="width:48px;height:36px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:.5rem;"
+          onerror="this.style.display='none'">` : '🏍️ '}
+        ${m.nome}
+      </td>
+      <td style="color:var(--orange);font-weight:700;">${formatBRL(m.preco)}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteMoto('${m.id}')">🗑️</button>
+      </td>
+    </tr>`).join('');
+
+  listaMotoEl.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Moto</th><th>Preço</th><th>Ação</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// Inicializa
+renderLista();
+</script>
+</body>
+</html>

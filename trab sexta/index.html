@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Catálogo</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Catálogo de <span>Motos</span></h1>
+      <p>Encontre a moto ideal para você · Emplacamento incluso · Maiores de 16 anos</p>
+    </div>
+
+    <!-- Banner informativo -->
+    <div class="info-banner">
+      <span class="info-icon">ℹ️</span>
+      <span>
+        <strong style="color:var(--orange)">Emplacamento garantido</strong> em todas as motos ·
+        Sistema sem financiamento ·
+        Público: maiores de 16 anos
+      </span>
+    </div>
+
+    <!-- Barra de busca -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="search-input"
+          class="form-control"
+          placeholder="Buscar moto por nome..."
+          autocomplete="off"
+        />
+      </div>
+      <span id="count-label" style="color:var(--text-muted);font-size:.85rem;white-space:nowrap;"></span>
+    </div>
+
+    <!-- Grid de motos -->
+    <div class="grid-cards" id="motos-grid"></div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer-strip">
+  <span>Moto Dark</span> &copy;  Sistema de Vendas 
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== CATÁLOGO DE MOTOS =====
+
+const grid   = document.getElementById('motos-grid');
+const search = document.getElementById('search-input');
+const count  = document.getElementById('count-label');
+
+/** Renderiza os cards de moto */
+function renderMotos(lista) {
+  grid.innerHTML = '';
+  count.textContent = `${lista.length} moto${lista.length !== 1 ? 's' : ''} encontrada${lista.length !== 1 ? 's' : ''}`;
+
+  if (!lista.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">🏍️</div>
+        <p>Nenhuma moto encontrada.</p>
+      </div>`;
+    return;
+  }
+
+  lista.forEach(moto => {
+    const card = document.createElement('div');
+    card.className = 'moto-card';
+
+    const imgEl = moto.img
+      ? `<img src="${moto.img}" alt="${moto.nome}" class="moto-card-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        + `<div class="moto-card-img-placeholder" style="display:none">🏍️</div>`
+      : `<div class="moto-card-img-placeholder">🏍️</div>`;
+
+    card.innerHTML = `
+      ${imgEl}
+      <div class="moto-card-body">
+        <div class="moto-card-name">${moto.nome}</div>
+        <div class="moto-card-price">${formatBRL(moto.preco)}</div>
+        <span class="moto-card-tag">🔖 Emplacamento Incluso</span>
+        <div class="moto-card-footer">
+          <button class="btn btn-primary btn-full"
+            onclick="openBuyModal('${moto.nome.replace(/'/g,"\\'")}', ${moto.preco}, 'moto')">
+            🛒 Comprar
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/** Filtra motos em tempo real */
+function filtrarMotos() {
+  const termo = search.value.toLowerCase().trim();
+  const motos = getMotos();
+  renderMotos(termo ? motos.filter(m => m.nome.toLowerCase().includes(termo)) : motos);
+}
+
+search.addEventListener('input', filtrarMotos);
+
+// Inicializa
+renderMotos(getMotos());
+</script>
+</body>
+</html>

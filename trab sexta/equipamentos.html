@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Equipamentos</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Catálogo de <span>Equipamentos</span></h1>
+      <p>Proteção e acessórios para motociclistas</p>
+    </div>
+
+    <!-- Banner -->
+    <div class="info-banner">
+      <span class="info-icon">🛡️</span>
+      <span>
+        Todos os equipamentos seguem normas de segurança ·
+        Proteção CE Nível 2 nos artigos indicados ·
+        Entrega para todo o Brasil
+      </span>
+    </div>
+
+    <!-- Busca -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="search-equip"
+          class="form-control"
+          placeholder="Buscar equipamento..."
+          autocomplete="off"
+        />
+      </div>
+      <span id="count-equip" style="color:var(--text-muted);font-size:.85rem;white-space:nowrap;"></span>
+    </div>
+
+    <!-- Grid de equipamentos -->
+    <div class="grid-cards" id="equip-grid"></div>
+
+  </div>
+</div>
+
+<footer class="footer-strip">
+  <span>Moto-Dark</span> &copy; 2025 · Equipamentos e Acessórios
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== CATÁLOGO DE EQUIPAMENTOS =====
+
+const grid  = document.getElementById('equip-grid');
+const count = document.getElementById('count-equip');
+const srch  = document.getElementById('search-equip');
+
+/** Renderiza cards de equipamentos */
+function renderEquipamentos(lista) {
+  grid.innerHTML = '';
+  count.textContent = `${lista.length} equipamento${lista.length !== 1 ? 's' : ''}`;
+
+  if (!lista.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">🪖</div>
+        <p>Nenhum equipamento encontrado.</p>
+      </div>`;
+    return;
+  }
+
+  lista.forEach(eq => {
+    const card = document.createElement('div');
+    card.className = 'equip-card';
+    card.innerHTML = `
+      <div class="equip-card-icon">${eq.icon}</div>
+      <div class="equip-card-body">
+        <div class="equip-card-name">${eq.nome}</div>
+        <div class="equip-card-desc">${eq.desc}</div>
+        <div class="equip-card-price">${formatBRL(eq.preco)}</div>
+        <button class="btn btn-primary btn-full" style="margin-top:.6rem;"
+          onclick="openBuyModal('${eq.nome.replace(/'/g,"\\'")}', ${eq.preco}, 'equipamento')">
+          🛒 Comprar
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+/** Filtra em tempo real */
+srch.addEventListener('input', () => {
+  const termo = srch.value.toLowerCase().trim();
+  renderEquipamentos(
+    termo
+      ? EQUIPAMENTOS.filter(e => e.nome.toLowerCase().includes(termo) || e.desc.toLowerCase().includes(termo))
+      : EQUIPAMENTOS
+  );
+});
+
+// Inicializa
+renderEquipamentos(EQUIPAMENTOS);
+</script>
+</body>
+</html>

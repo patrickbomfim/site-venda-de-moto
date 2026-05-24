@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moto-Dark — Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* Mini gráfico de barras */
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+    .bar-chart .bar {
+      flex: 1;
+      background: var(--orange);
+      border-radius: 4px 4px 0 0;
+      opacity: .7;
+      transition: opacity .2s;
+      min-height: 4px;
+    }
+    .bar-chart .bar:hover { opacity: 1; }
+    .bar-chart-labels {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .bar-chart-labels span {
+      flex: 1;
+      text-align: center;
+      font-size: .68rem;
+      color: var(--text-muted);
+    }
+
+    /* Activity feed */
+    .activity-list { display: flex; flex-direction: column; gap: .6rem; }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .7rem 1rem;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
+      font-size: .88rem;
+      border: 1px solid var(--border);
+    }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+    .activity-text { flex: 1; }
+    .activity-date { color: var(--text-muted); font-size: .78rem; }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <span class="brand-icon">🏍️</span> Moto-Dark
+  </a>
+  <ul class="navbar-links" id="navbar-links">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> Catálogo</a></li>
+    <li><a href="cadastro.html"><span class="nav-icon">➕</span> Cadastrar Moto</a></li>
+    <li><a href="clientes.html"><span class="nav-icon">👥</span> Clientes</a></li>
+    <li><a href="equipamentos.html"><span class="nav-icon">🪖</span> Equipamentos</a></li>
+    <li><a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+    <li><a href="relatorios.html"><span class="nav-icon">📈</span> Relatórios</a></li>
+    <li><a href="login.html"><span class="nav-icon">🔑</span> Login</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== CONTEÚDO ===== -->
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Painel <span>Administrativo</span></h1>
+      <p>Visão geral do sistema Moto-Dark</p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:.5rem;">
+
+      <!-- Gráfico de interesse simulado -->
+      <div class="card" style="padding:1.5rem;">
+        <p class="section-title">Interesses por Mês (simulado)</p>
+        <div class="bar-chart" id="bar-chart"></div>
+        <div class="bar-chart-labels" id="bar-labels"></div>
+      </div>
+
+      <!-- Motos mais populares -->
+      <div class="card" style="padding:1.5rem;">
+        <p class="section-title">Top Motos no Catálogo</p>
+        <div id="top-motos"></div>
+      </div>
+
+    </div>
+
+    <!-- Atividade recente -->
+    <div style="margin-top:2rem;">
+      <p class="section-title">Atividade Recente</p>
+      <div class="activity-list" id="activity-list"></div>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div style="margin-top:2rem;">
+      <p class="section-title">Ações Rápidas</p>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+        <a href="cadastro.html"   class="btn btn-primary">➕ Cadastrar Moto</a>
+        <a href="clientes.html"   class="btn btn-outline">👥 Cadastrar Cliente</a>
+        <a href="relatorios.html" class="btn btn-ghost">📈 Ver Relatórios</a>
+        <a href="equipamentos.html" class="btn btn-ghost">🪖 Equipamentos</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer-strip">
+  <span>Moto-Dark</span> &copy; 2025 · Painel Administrativo
+</footer>
+
+<script src="script.js"></script>
+<script>
+// ===== DASHBOARD =====
+
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function renderDashboard() {
+  const motos    = getMotos();
+  const clientes = getClientes();
+  const compras  = getCompras();
+
+  // ---- KPI Cards ----
+  const totalValor = motos.reduce((s, m) => s + m.preco, 0);
+  const kpis = [
+    { icon: '🏍️', label: 'Motos no Catálogo',  value: motos.length,    color: '' },
+    { icon: '👥', label: 'Clientes Cadastrados', value: clientes.length, color: '' },
+    { icon: '🛒', label: 'Interesses Registrados', value: compras.length, color: '' },
+    { icon: '💰', label: 'Valor Médio de Moto', value: motos.length ? formatBRL(totalValor / motos.length) : 'R$ 0', color: '', raw: true },
+  ];
+
+  document.getElementById('stat-grid').innerHTML = kpis.map(k => `
+    <div class="stat-card">
+      <div class="stat-icon">${k.icon}</div>
+      <div class="stat-value">${k.raw ? k.value : k.value}</div>
+      <div class="stat-label">${k.label}</div>
+    </div>`).join('');
+
+  // ---- Gráfico de barras (dados simulados) ----
+  const mesDados = MESES.map((_, i) => Math.floor(Math.random() * 18) + 2);
+  const maxVal   = Math.max(...mesDados);
+  const chart    = document.getElementById('bar-chart');
+  const labels   = document.getElementById('bar-labels');
+
+  chart.innerHTML = mesDados.map(v =>
+    `<div class="bar" style="height:${Math.round((v / maxVal) * 100)}%" title="${v} interesses"></div>`
+  ).join('');
+
+  labels.innerHTML = MESES.map(m => `<span>${m}</span>`).join('');
+
+  // ---- Top motos (por preço) ----
+  const topMotos = [...motos].sort((a, b) => b.preco - a.preco).slice(0, 5);
+  document.getElementById('top-motos').innerHTML = topMotos.length
+    ? topMotos.map((m, i) => `
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--orange);font-family:var(--font-display);font-weight:700;font-size:1.1rem;width:1.4rem;text-align:center;">${i + 1}</span>
+          <div style="flex:1;">
+            <div style="font-size:.9rem;font-weight:600;">${m.nome}</div>
+            <div style="color:var(--orange);font-size:.85rem;">${formatBRL(m.preco)}</div>
+          </div>
+        </div>`).join('')
+    : '<p style="color:var(--text-muted);font-size:.9rem;">Nenhuma moto cadastrada.</p>';
+
+  // ---- Atividade recente (compras + clientes) ----
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const atividades = [
+    ...compras.slice(-5).reverse().map(c => ({
+      texto: `Interesse em <strong>${c.nome}</strong> — ${formatBRL(c.preco)}`,
+      data: c.data || hoje
+    })),
+    ...clientes.slice(-3).reverse().map(c => ({
+      texto: `Cliente <strong>${c.nome}</strong> cadastrado`,
+      data: c.dataCad || hoje
+    })),
+    ...motos.slice(-2).reverse().map(m => ({
+      texto: `Moto <strong>${m.nome}</strong> adicionada ao catálogo`,
+      data: hoje
+    })),
+  ].slice(0, 8);
+
+  const actEl = document.getElementById('activity-list');
+  actEl.innerHTML = atividades.length
+    ? atividades.map(a => `
+        <div class="activity-item">
+          <div class="activity-dot"></div>
+          <div class="activity-text">${a.texto}</div>
+          <div class="activity-date">${a.data}</div>
+        </div>`).join('')
+    : `<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhuma atividade registrada ainda.</p></div>`;
+}
+
+renderDashboard();
+</script>
+</body>
+</html>
